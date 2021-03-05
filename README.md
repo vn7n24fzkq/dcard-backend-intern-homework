@@ -16,3 +16,9 @@
 
 -   [ ] 有懲罰機制的 window ?
         ex : 請求到達上限後,在 rate limit reset 前再送請求就延長 10 分鐘
+
+# 參考資料
+
+### RateLimit Header Fields for HTTP
+
+https://tools.ietf.org/id/draft-polli-ratelimit-headers-00.html
