@@ -1,0 +1,45 @@
+{
+    "name": "dcard-backend-intern-homework",
+    "version": "1.0.0",
+    "description": "- Dcard 每天午夜都有大量使用者湧入抽卡，為了不讓伺服器過載，請設計一個 middleware： - 限制每小時來自同一個 IP 的請求數量不得超過 1000 - 在 response headers 中加入剩餘的請求數量 (X-RateLimit-Remaining) 以及 rate limit 歸零的時間 (X-RateLimit-Reset) - 如果超過限制的話就回傳 429 (Too Many Requests) - 可以使用各種資料庫達成",
+    "main": "index.ts",
+    "scripts": {
+        "start": "node ./dist/app.js",
+        "start:dev": "nodemon ./src/app.ts",
+        "build": "tsc --project ./",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/vn7n24fzkq/dcard-backend-intern-homework.git"
+    },
+    "author": "vn7n24fzkq",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/vn7n24fzkq/dcard-backend-intern-homework/issues"
+    },
+    "homepage": "https://github.com/vn7n24fzkq/dcard-backend-intern-homework#readme",
+    "devDependencies": {
+        "@types/express": "^4.17.11",
+        "@types/node": "^14.14.31",
+        "@typescript-eslint/eslint-plugin": "^4.16.1",
+        "@typescript-eslint/parser": "^4.16.1",
+        "eslint": "^7.21.0",
+        "eslint-config-airbnb-typescript": "^12.3.1",
+        "eslint-plugin-import": "^2.22.1",
+        "nodemon": "^2.0.7",
+        "prettier": "^2.2.1",
+        "ts-node": "^9.1.1",
+        "typescript": "^4.2.3"
+    },
+    "prettier": {
+        "trailingComma": "es5",
+        "tabWidth": 4,
+        "semi": true,
+        "singleQuote": true
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "winston": "^3.3.3"
+    }
+}
