@@ -6,7 +6,13 @@
 -   如果超過限制的話就回傳 429 (Too Many Requests)
 -   可以使用各種資料庫達成
 
-## Rate limit 策略
+## TODO
+
+- [ ] 處理 redis race condition 版本
+- [ ] 不處理 redis race condition 版本
+
+
+### Rate limit 策略
 
 -   [ ] Fixed window
         以第一個請求往後一小時來劃分 window
@@ -17,7 +23,7 @@
 -   [ ] 有懲罰機制的 window ?
         ex : 請求到達上限後,在 rate limit reset 前再送請求就延長 10 分鐘
 
-# 參考資料
+## 參考資料
 
 ### RateLimit Header Fields for HTTP
 
