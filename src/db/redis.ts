@@ -17,5 +17,6 @@ export function initRedis(callback: () => void) {
 }
 
 export function getRedisClient(): RedisClient {
+    if (client === null) throw new Error('You need initial redis client first');
     return client;
 }
