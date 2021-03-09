@@ -5,7 +5,6 @@ import { getRedisClient } from '../db/redis';
 const MAX_RATE_LIMIT_REMAINING = 1000; // redis store value range is 2^63-1 to -2^63
 const RATE_LIMIT_RESET_TIME = 3600; // seconds
 
-// TODO we can use redis origin data and don't need to create a new object
 interface RateLimitInfo {
     remaining: number;
     resetTime: number;
@@ -14,18 +13,18 @@ interface RateLimitInfo {
 function fixedWindowLimiter(ip: string): Promise<RateLimitInfo> {
     return new Promise<RateLimitInfo>((resolve, reject) => {
         const info: RateLimitInfo = {
-            remaining: MAX_RATE_LIMIT_REMAINING - 1, // first request so minus 1
+            remaining: MAX_RATE_LIMIT_REMAINING,
             resetTime: RATE_LIMIT_RESET_TIME,
         };
         getRedisClient().set(
             ip,
-            String(info.remaining),
+            `${info.remaining}`,
             'EX',
             info.resetTime,
             'NX',
             (err, reply: 'OK' | undefined) => {
-                // OK => first time set
                 if (err) reject(err);
+                // OK => first time set
                 if (reply) {
                     // If ip doesn't exist, we return the info after first time set
                     resolve(info);
