@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 
 import { getRedisClient } from '../db/redis';
 
-const MAX_RATE_LIMIT_REMAINING = 1000; // redis store value range is 2^63-1 to -2^63
+// redis store value range is 2^63-1 to -2^63
+const MAX_RATE_LIMIT_REMAINING = 10 - 1; // we pre-minus 1 for first request
 const RATE_LIMIT_RESET_TIME = 3600; // seconds
 
 interface RateLimitInfo {
@@ -36,8 +37,9 @@ function fixedWindowLimiter(ip: string): Promise<RateLimitInfo> {
                         .decr(ip)
                         .ttl(ip)
                         .exec((err, replies: number[]) => {
-                            if (err) reject(err); // probably client disconnect or expired
-                            info.remaining = replies[0] >= 0 ? replies[0] : 0;
+                            // probably client disconnect or expired or value is limited
+                            if (err) reject(err);
+                            info.remaining = replies[0] >= 0 ? replies[0] : -1;
                             info.resetTime = replies[1];
                             resolve(info);
                         });
@@ -53,10 +55,14 @@ export function rateLimitMiddleware(
     next: NextFunction
 ) {
     fixedWindowLimiter(req.ip).then((rateLimitInfo) => {
-        res.setHeader('X-RateLimit-Remaining', rateLimitInfo.remaining);
+        res.setHeader(
+            'X-RateLimit-Remaining',
+            rateLimitInfo.remaining >= 0 ? rateLimitInfo.remaining : 0
+        );
+
         res.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime);
 
-        if (rateLimitInfo.remaining <= 0) {
+        if (rateLimitInfo.remaining < 0) {
             return res.status(429).send('Too many request').end();
         }
 
