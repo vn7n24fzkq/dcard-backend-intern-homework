@@ -8,16 +8,17 @@
 
 ## TODO
 
-- [ ] 處理 redis race condition 版本
-- [ ] 不處理 redis race condition 版本
+    // 以目前的程式來說沒甚麼影響, 先做 sliding window
 
+-   [ ] 處理 redis race condition 版本
+-   [ ] 不處理 redis race condition 版本
 
 ### Rate limit 策略
 
--   [ ] Fixed window
+-   [x] Fixed window
         以第一個請求往後一小時來劃分 window
 
--   [ ] Moving window
+-   [ ] Sliding window
         以最後一個請求往前推一小時來劃分 window
 
 -   [ ] 有懲罰機制的 window ?
