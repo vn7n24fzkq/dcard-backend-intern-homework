@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { getRedisClient } from '../db/redis';
 
 // redis store value range is 2^63-1 to -2^63
-const MAX_RATE_LIMIT_REMAINING = 10 - 1; // we pre-minus 1 for first request
+const MAX_RATE_LIMIT_REMAINING = 1000 - 1; // we pre-minus 1 for first request
 const RATE_LIMIT_RESET_TIME = 3600; // seconds
 
 interface RateLimitInfo {
@@ -37,7 +37,7 @@ function fixedWindowLimiter(ip: string): Promise<RateLimitInfo> {
                         .decr(ip)
                         .ttl(ip)
                         .exec((err, replies: number[]) => {
-                            // probably client disconnect or expired or value is limited
+                            // probably get error when client disconnect or expired or value is limited
                             if (err) reject(err);
                             info.remaining = replies[0] >= 0 ? replies[0] : -1;
                             info.resetTime = replies[1];
