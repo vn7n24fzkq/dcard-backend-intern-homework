@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { getRedisClient } from '../db/redis';
 
 // redis store value range is 2^63-1 to -2^63
-const MAX_RATE_LIMIT_REMAINING = 1000 - 1; // We pre-minus 1 for first request
+const REQUEST_QUOTA = 1000;
+const REQUEST_QUOTA_REMAINING = REQUEST_QUOTA - 1; // We pre-minus 1 for first request
 const RATE_LIMIT_RESET_TIME = 3600; // seconds
 
 interface RateLimitInfo {
@@ -17,19 +18,10 @@ function fixedWindowLimiter(
 ): Promise<RateLimitInfo> {
     return new Promise<RateLimitInfo>((resolve, reject) => {
         const info: RateLimitInfo = {
-            remaining: MAX_RATE_LIMIT_REMAINING,
+            remaining: REQUEST_QUOTA_REMAINING,
             resetTime: RATE_LIMIT_RESET_TIME,
         };
         try {
-            console.log(
-                getRedisClient().set(
-                    ip,
-                    `${info.remaining}`,
-                    'EX',
-                    info.resetTime,
-                    'NX'
-                )
-            );
             getRedisClient().set(
                 ip,
                 `${info.remaining}`,
@@ -83,19 +75,26 @@ export function rateLimitMiddleware(
     res: Response,
     next: NextFunction
 ) {
-    fixedWindowLimiter(req.ip, true).then((rateLimitInfo) => {
-        res.setHeader('X-RateLimit-Limit', rateLimitInfo.resetTime);
-        res.setHeader(
-            'X-RateLimit-Remaining',
-            rateLimitInfo.remaining >= 0 ? rateLimitInfo.remaining : 0
-        );
+    fixedWindowLimiter(req.ip, true)
+        .then((rateLimitInfo) => {
+            res.setHeader(
+                'X-RateLimit-Limit',
+                `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="fixed window"`
+            );
+            res.setHeader(
+                'X-RateLimit-Remaining',
+                rateLimitInfo.remaining >= 0 ? rateLimitInfo.remaining : 0
+            );
 
-        res.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime);
+            res.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime);
 
-        if (rateLimitInfo.remaining < 0) {
-            return res.status(429).send('Too many request').end();
-        }
+            if (rateLimitInfo.remaining < 0) {
+                return res.status(429).send('Too many request').end();
+            }
 
-        next();
-    });
+            next();
+        })
+        .catch((_) => {
+            return res.status(500).end();
+        });
 }

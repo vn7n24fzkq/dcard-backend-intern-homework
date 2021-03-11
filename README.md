@@ -17,11 +17,13 @@
 -   [x] 有懲罰機制的 window ?
         ex : 請求到達上限後,在 rate limit reset 前再送請求就延長 10 秒
 
-## Thinks
+## Note
+
+-   額外在 header 加上 X-RateLimit-Limit 來回傳 time window 中有多少請求額度, 以及 window 類型
 
 -   Race Condition 問題
     -   目前程式不太受 Race Conditioin 影響
-    -   Do every thing in Lua script
+    -   Do everything in Lua script
 
 ## 參考資料
 
