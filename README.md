@@ -6,13 +6,6 @@
 -   如果超過限制的話就回傳 429 (Too Many Requests)
 -   可以使用各種資料庫達成
 
-## TODO
-
-    // 以目前的程式來說沒甚麼影響, 先做 sliding window
-
--   [ ] 處理 redis race condition 版本
--   [ ] 不處理 redis race condition 版本
-
 ### Rate limit 策略
 
 -   [x] Fixed window
@@ -21,8 +14,14 @@
 -   [ ] Sliding window
         以最後一個請求往前推一小時來劃分 window
 
--   [ ] 有懲罰機制的 window ?
-        ex : 請求到達上限後,在 rate limit reset 前再送請求就延長 10 分鐘
+-   [x] 有懲罰機制的 window ?
+        ex : 請求到達上限後,在 rate limit reset 前再送請求就延長 10 秒
+
+## Thinks
+
+-   Race Condition 問題
+    -   目前程式不太受 Race Conditioin 影響
+    -   Do every thing in Lua script
 
 ## 參考資料
 
