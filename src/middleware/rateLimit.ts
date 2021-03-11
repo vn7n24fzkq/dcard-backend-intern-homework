@@ -70,31 +70,48 @@ function fixedWindowLimiter(
     });
 }
 
+function slidingWindowLimiter(ip: string): Promise<RateLimitInfo> {
+    return new Promise<RateLimitInfo>((resolve, reject) => {
+        const info: RateLimitInfo = {
+            remaining: REQUEST_QUOTA_REMAINING,
+            resetTime: RATE_LIMIT_RESET_TIME,
+        };
+    });
+}
+
 export function rateLimitMiddleware(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
-    fixedWindowLimiter(req.ip, true)
-        .then((rateLimitInfo) => {
-            res.setHeader(
-                'X-RateLimit-Limit',
-                `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="fixed window"`
-            );
-            res.setHeader(
-                'X-RateLimit-Remaining',
-                rateLimitInfo.remaining >= 0 ? rateLimitInfo.remaining : 0
-            );
+    if (
+        process.env.RATE_STRATEGY === 'fixed-window' ||
+        process.env.RATE_STRATEGY === 'punishment-fixed-window'
+    ) {
+        fixedWindowLimiter(
+            req.ip,
+            process.env.RATE_STRATEGY === 'punishment-fixed-window'
+        )
+            .then((rateLimitInfo) => {
+                res.setHeader(
+                    'X-RateLimit-Limit',
+                    `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="fixed window"`
+                );
+                res.setHeader(
+                    'X-RateLimit-Remaining',
+                    rateLimitInfo.remaining >= 0 ? rateLimitInfo.remaining : 0
+                );
 
-            res.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime);
+                res.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime);
 
-            if (rateLimitInfo.remaining < 0) {
-                return res.status(429).send('Too many request').end();
-            }
+                if (rateLimitInfo.remaining < 0) {
+                    return res.status(429).send('Too many request').end();
+                }
 
-            next();
-        })
-        .catch((_) => {
-            return res.status(500).end();
-        });
+                next();
+            })
+            .catch((_) => {
+                return res.status(500).end();
+            });
+    }
 }

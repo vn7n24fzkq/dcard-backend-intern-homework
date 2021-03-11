@@ -5,7 +5,9 @@
     "main": "index.ts",
     "scripts": {
         "start": "node ./dist/app.js",
-        "start:dev": "nodemon ./src/app.ts",
+        "start:fixed-window": "RATE_STRATEGY=fixed0window nodemon ./src/app.ts",
+        "start:sliding-window": "RATE_STRATEGY=sliding-window nodemon ./src/app.ts",
+        "start:punishment-fixed-window": "RATE_STRATEGY=punishment-fixed-window nodemon ./src/app.ts",
         "build": "tsc --project ./",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
