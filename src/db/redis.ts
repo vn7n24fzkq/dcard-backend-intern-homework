@@ -11,7 +11,6 @@ export function initRedis(callback: () => void) {
         console.error(error);
     });
     client.on('ready', () => {
-        console.log('ready');
         callback();
     });
 }

@@ -1,6 +1,7 @@
 import express from 'express';
 import { rateLimitMiddleware } from './middleware/rateLimit';
 import { initRedis } from './db/redis';
+import { logger } from './utils/logger';
 
 // Initial redis first, then we start the server
 initRedis(() => {
@@ -15,6 +16,9 @@ function startServer() {
     app.get('/', (req, res) => res.send('Hello'));
 
     app.listen(PORT, () => {
-        console.log(`Server Port : ${PORT}`);
+        logger.log({
+            level: 'info',
+            message: `Server ${process.env.RATE_STRATEGY} Port : ${PORT}`,
+        });
     });
 }
