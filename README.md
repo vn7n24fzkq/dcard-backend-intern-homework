@@ -14,9 +14,10 @@
 -   [x] Sliding window
         以最後一個請求往前推一小時來劃分 window
 
-## Note
-
+### Note
 -   額外在 header 加上 X-RateLimit-Limit 來回傳 time window 中有多少請求額度, 以及 window 類型
+
+-   sliding-window 不包含 `X-RateLimit-Reset` 因為會額外做計算
 
 -   Race Condition 問題
     -   目前程式不太受 Race Conditioin 影響
