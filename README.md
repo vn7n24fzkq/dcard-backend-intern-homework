@@ -15,7 +15,10 @@
         以最後一個請求往前推一小時來劃分 window
 
 ### Note
+
 -   額外在 header 加上 X-RateLimit-Limit 來回傳 time window 中有多少請求額度, 以及 window 類型
+
+    -   EX : `100;window=60;comment="fixed window"` 代表每個 window 60 秒 並且 window 裡面允許 100 個請求
 
 -   sliding-window 不包含 `X-RateLimit-Reset` 因為會額外做計算
 

@@ -17,7 +17,7 @@ function slidingWindowLimiter(ip: string): Promise<RateLimitInfo> {
         info: RateLimitInfo,
         remaining: number
     ) {
-        info.limit = `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="sliding window"`;
+        info.limit = `${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="sliding window"`;
         info.remaining = remaining;
         resolve(info);
     }
@@ -67,7 +67,7 @@ function fixedWindowLimiter(ip: string): Promise<RateLimitInfo> {
             .ttl(ip)
             .exec((err, replies: number[]) => {
                 if (err) reject(err);
-                info.limit = `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="fixed window"`;
+                info.limit = `${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="fixed window"`;
                 info.remaining = replies[1];
                 info.resetTime = replies[2];
                 resolve(info);
