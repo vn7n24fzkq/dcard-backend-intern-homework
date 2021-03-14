@@ -6,7 +6,7 @@
 -   如果超過限制的話就回傳 429 (Too Many Requests)
 -   可以使用各種資料庫達成
 
-### How to start server
+### How to start
 
 `npm install`
 
