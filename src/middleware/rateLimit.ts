@@ -4,79 +4,95 @@ import { getRedisClient } from '../db/redis';
 
 // redis store value range is 2^63-1 to -2^63
 const REQUEST_QUOTA = 1000;
-const REQUEST_QUOTA_REMAINING = REQUEST_QUOTA - 1; // We pre-minus 1 for first request
 const RATE_LIMIT_RESET_TIME = 3600; // seconds
 
 interface RateLimitInfo {
-    remaining: number;
-    resetTime: number;
+    limit?: string;
+    remaining: number; // -1 means rate-limit was limited
+    resetTime?: number;
 }
-
-function fixedWindowLimiter(
-    ip: string,
-    punishStrategy: boolean
-): Promise<RateLimitInfo> {
-    return new Promise<RateLimitInfo>((resolve, reject) => {
-        const info: RateLimitInfo = {
-            remaining: REQUEST_QUOTA_REMAINING,
-            resetTime: RATE_LIMIT_RESET_TIME,
-        };
-        try {
-            getRedisClient().set(
-                ip,
-                `${info.remaining}`,
-                'EX',
-                info.resetTime,
-                'NX',
-                (err, reply: 'OK' | undefined) => {
-                    if (err) reject(err);
-                    // OK => first time set
-                    if (reply) {
-                        // If ip doesn't exist, we return the info after first time set
-                        resolve(info);
-                    } else {
-                        // If ip does exist, we decr the value and get reset time
-                        // Avoid do decr when set key at first time
-                        getRedisClient()
-                            .multi()
-                            .decr(ip)
-                            .ttl(ip)
-                            .exec((err, replies: number[]) => {
-                                // probably get error when client disconnect or value is limited
-                                if (err) reject(err);
-                                info.remaining =
-                                    replies[0] >= 0 ? replies[0] : -1;
-                                info.resetTime = replies[1];
-                                if (punishStrategy && info.remaining < 0) {
-                                    // If we use punish strategy and the ip doesn't have any remaing quota
-                                    // We increase reset time to punish it
-                                    getRedisClient().expire(
-                                        ip,
-                                        info.resetTime + 10
-                                    );
-                                    info.resetTime += 10;
-                                    resolve(info);
-                                } else {
-                                    resolve(info);
-                                }
-                            });
-                    }
-                }
-            );
-        } catch (err) {
-            // I'm too lazy to handle each error
-            reject(err);
-        }
-    });
-}
-
 function slidingWindowLimiter(ip: string): Promise<RateLimitInfo> {
+    function processRateLimit(
+        resolve: (value: RateLimitInfo) => void,
+        info: RateLimitInfo,
+        remaining: number
+    ) {
+        info.limit = `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="sliding window"`;
+        info.remaining = remaining;
+        resolve(info);
+    }
     return new Promise<RateLimitInfo>((resolve, reject) => {
         const info: RateLimitInfo = {
-            remaining: REQUEST_QUOTA_REMAINING,
-            resetTime: RATE_LIMIT_RESET_TIME,
+            remaining: REQUEST_QUOTA,
         };
+        const currentTimestamp = Date.now();
+        const startTimestamp = currentTimestamp - RATE_LIMIT_RESET_TIME * 1000;
+        getRedisClient()
+            .multi()
+            .zremrangebyscore(ip, '-inf', startTimestamp)
+            .zcard(ip)
+            .expire(ip, RATE_LIMIT_RESET_TIME)
+            .exec((err, replies: number[]) => {
+                if (err) reject(err);
+                const remaining = REQUEST_QUOTA - replies[1] - 1; // we minus 1 for current request
+                if (remaining >= 0) {
+                    getRedisClient()
+                        .multi()
+                        .zadd(
+                            ip,
+                            'NX',
+                            currentTimestamp,
+                            `${currentTimestamp + Math.random()}` // make member unique
+                        )
+                        .exec((err, replies: number[]) => {
+                            if (err) reject(err);
+                            processRateLimit(resolve, info, remaining);
+                        });
+                } else {
+                    processRateLimit(resolve, info, -1);
+                }
+            });
     });
+}
+
+function fixedWindowLimiter(ip: string): Promise<RateLimitInfo> {
+    return new Promise<RateLimitInfo>((resolve, reject) => {
+        const info: RateLimitInfo = {
+            remaining: REQUEST_QUOTA,
+        };
+        getRedisClient()
+            .multi()
+            .set(ip, `${REQUEST_QUOTA}`, 'EX', RATE_LIMIT_RESET_TIME, 'NX')
+            .decr(ip)
+            .ttl(ip)
+            .exec((err, replies: number[]) => {
+                if (err) reject(err);
+                info.limit = `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="fixed window"`;
+                info.remaining = replies[1];
+                info.resetTime = replies[2];
+                resolve(info);
+            });
+    });
+}
+
+function setRateLimitInfoToHeader(
+    info: RateLimitInfo,
+    res: Response
+): Response {
+    res.setHeader(
+        'X-RateLimit-Remaining',
+        info.remaining >= 0 ? info.remaining : 0
+    );
+    if (info.limit !== undefined) {
+        res.setHeader('X-RateLimit-Limit', info.limit);
+    }
+    if (info.resetTime !== undefined) {
+        res.setHeader('X-RateLimit-Reset', info.resetTime);
+    }
+    if (info.remaining < 0) {
+        return res.status(429).send('Too many request');
+    }
+    return res;
 }
 
 export function rateLimitMiddleware(
@@ -84,31 +100,24 @@ export function rateLimitMiddleware(
     res: Response,
     next: NextFunction
 ) {
-    if (
-        process.env.RATE_STRATEGY === 'fixed-window' ||
-        process.env.RATE_STRATEGY === 'punishment-fixed-window'
-    ) {
-        fixedWindowLimiter(
-            req.ip,
-            process.env.RATE_STRATEGY === 'punishment-fixed-window'
-        )
+    if (process.env.RATE_STRATEGY === 'fixed-window') {
+        fixedWindowLimiter(req.ip)
             .then((rateLimitInfo) => {
-                res.setHeader(
-                    'X-RateLimit-Limit',
-                    `${REQUEST_QUOTA},${REQUEST_QUOTA};window=${RATE_LIMIT_RESET_TIME};comment="fixed window"`
-                );
-                res.setHeader(
-                    'X-RateLimit-Remaining',
-                    rateLimitInfo.remaining >= 0 ? rateLimitInfo.remaining : 0
-                );
-
-                res.setHeader('X-RateLimit-Reset', rateLimitInfo.resetTime);
-
-                if (rateLimitInfo.remaining < 0) {
-                    return res.status(429).send('Too many request').end();
+                setRateLimitInfoToHeader(rateLimitInfo, res);
+                if (!res.writableEnded) {
+                    next();
                 }
-
-                next();
+            })
+            .catch((_) => {
+                return res.status(500).end();
+            });
+    } else if (process.env.RATE_STRATEGY === 'sliding-window') {
+        slidingWindowLimiter(req.ip)
+            .then((rateLimitInfo) => {
+                setRateLimitInfoToHeader(rateLimitInfo, res);
+                if (!res.writableEnded) {
+                    next();
+                }
             })
             .catch((_) => {
                 return res.status(500).end();

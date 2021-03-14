@@ -11,11 +11,8 @@
 -   [x] Fixed window
         以第一個請求往後一小時來劃分 window
 
--   [ ] Sliding window
+-   [x] Sliding window
         以最後一個請求往前推一小時來劃分 window
-
--   [x] 有懲罰機制的 window ?
-        ex : 請求到達上限後,在 rate limit reset 前再送請求就延長 10 秒
 
 ## Note
 
@@ -24,6 +21,7 @@
 -   Race Condition 問題
     -   目前程式不太受 Race Conditioin 影響
     -   Do everything in Lua script
+        -   應考慮 script 的 atomic 特性會不會影響到整體運作效率
 
 ## 參考資料
 

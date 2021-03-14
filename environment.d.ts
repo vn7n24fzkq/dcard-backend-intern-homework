@@ -1,10 +1,7 @@
 declare global {
     namespace NodeJS {
         interface ProcessEnv {
-            RATE_STRATEGY:
-                | 'fixed-window'
-                | 'sliding-window'
-                | 'punishment-fixed-window';
+            RATE_STRATEGY: 'fixed-window' | 'sliding-window';
         }
     }
 }
