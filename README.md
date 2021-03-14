@@ -6,6 +6,17 @@
 -   如果超過限制的話就回傳 429 (Too Many Requests)
 -   可以使用各種資料庫達成
 
+### How to start server
+
+`npm install`
+`npm build`
+
+-   Run with fixed window
+    `npm run start:fixed-window`
+
+-   Run with sliding window
+    `npm run start:sliding-window`
+
 ### Rate limit 策略
 
 -   [x] Fixed window
@@ -18,12 +29,12 @@
 
 -   額外在 header 加上 X-RateLimit-Limit 來回傳 time window 中有多少請求額度, 以及 window 類型
 
-    -   EX : `100;window=60;comment="fixed window"` 代表每個 window 60 秒 並且 window 裡面允許 100 個請求
+    -   EX : `100;window=60;comment="fixed window"` 代表每個 window 60 秒,並且每個 window 裡面允許 100 個請求
 
--   sliding-window 不包含 `X-RateLimit-Reset` 因為會額外做計算
+-   sliding-window 不包含 `X-RateLimit-Reset` 因為會需要額外做計算
 
 -   Race Condition 問題
-    -   目前程式不太受 Race Conditioin 影響
+    -   目前 fixed window 不太受 Race Conditioin 影響
     -   Do everything in Lua script
         -   應考慮 script 的 atomic 特性會不會影響到整體運作效率
 
