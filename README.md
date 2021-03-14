@@ -9,12 +9,15 @@
 ### How to start server
 
 `npm install`
+
 `npm build`
 
 -   Run with fixed window
+ 
     `npm run start:fixed-window`
 
 -   Run with sliding window
+ 
     `npm run start:sliding-window`
 
 ### Rate limit 策略
