@@ -1,6 +1,7 @@
 import express from 'express';
 import { rateLimitMiddleware } from './middleware/rateLimit';
 import { initRedis } from './db/redis';
+import { loggerMiddleware } from './middleware/loggerMiddleware';
 import { logger } from './utils/logger';
 
 // Initial redis first, then we start the server
@@ -11,6 +12,7 @@ initRedis(() => {
 function startServer() {
     const app = express();
     const PORT = 8000;
+    app.use(loggerMiddleware);
     app.use(rateLimitMiddleware);
 
     app.get('/', (req, res) => res.send('Hello'));

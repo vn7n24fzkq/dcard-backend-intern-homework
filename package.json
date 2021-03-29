@@ -23,6 +23,7 @@
     "homepage": "https://github.com/vn7n24fzkq/dcard-backend-intern-homework#readme",
     "devDependencies": {
         "@types/express": "^4.17.11",
+        "@types/morgan": "^1.9.2",
         "@types/node": "^14.14.31",
         "@types/redis": "^2.8.28",
         "@typescript-eslint/eslint-plugin": "^4.16.1",
@@ -43,6 +44,7 @@
     },
     "dependencies": {
         "express": "^4.17.1",
+        "morgan": "^1.10.0",
         "redis": "^3.0.2",
         "winston": "^3.3.3"
     }
