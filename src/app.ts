@@ -3,6 +3,7 @@ import { rateLimitMiddleware } from './middleware/rateLimit';
 import { initRedis } from './db/redis';
 import { loggerMiddleware } from './middleware/loggerMiddleware';
 import { logger } from './utils/logger';
+import { errorHandler } from './errorHandler';
 
 // Initial redis first, then we start the server
 initRedis(() => {
@@ -15,7 +16,12 @@ function startServer() {
     app.use(loggerMiddleware);
     app.use(rateLimitMiddleware);
 
-    app.get('/', (req, res) => res.send('Hello'));
+    app.get('/', (req, res, next) => {
+        res.send('Hello');
+    });
+
+    // We need register error handler after route setup
+    app.use(errorHandler);
 
     app.listen(PORT, () => {
         logger.log({
