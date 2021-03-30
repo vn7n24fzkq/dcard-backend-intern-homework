@@ -41,6 +41,11 @@
     -   Do everything in Lua script
         -   應考慮 script 的 atomic 特性會不會影響到整體運作效率
 ## 測試
+##### 環境
+VirtualBox
+OS: Ubuntu 20.02
+Memory: 8192 MB
+Processor: 8
 使用 [autocannon](https://github.com/mcollina/autocannon) 測試 : 參數 connections 20 pipelining 4 duration 30 其餘都使用預設 
 
 先用 ``` npm run ```啟動 任一 server
@@ -62,13 +67,22 @@
 - sliding-window with logger
 <img src="https://user-images.githubusercontent.com/20241522/112953116-c6f0cf80-916f-11eb-9400-6ef666d01fa9.png" height="240" width="500"> 
 
-可以看到以相同時間內同一IP可以處理的請求數量來說 sliding-window 上的效果是跟 fixed-window 差不多的的
+可以看到以相同時間內同一 IP 可以處理的請求數量來說 sliding-window 上的效果是跟 fixed-window 差不多的的
 
 加入 logger 後可以看到對於可以處理的請求數量來說有明顯下降的趨勢(如果非必要，在設計上應考慮減少對於每個請求的前處理會做的事情)
 
 下圖為將 logger 放在 rateLimit middleware 後的結果(只 log 被接受的請求)，可以發現改善了不少
 
 <img src="https://user-images.githubusercontent.com/20241522/112955064-9f9b0200-9171-11eb-89c5-f62ed90d146c.png" height="240" width="500">
+
+#### 將 aucton 參數改成 connections 20 pipelining 1 duration 30 works 8
+這邊把每個 connnection 都當成獨立的 client 來模擬不同客戶端同時請求的狀況(總共 20*8=160 個 client)
+
+- fixed-window
+<img src="https://user-images.githubusercontent.com/20241522/112971292-a6ca0c00-9181-11eb-9470-0d2ca1901a25.png" height="240" width="500">
+
+- sliding-window
+<img src="https://user-images.githubusercontent.com/20241522/112970831-34592c00-9181-11eb-93b7-1e864a2952b8.png" height="240" width="500">
 
 ## 參考資料
 
