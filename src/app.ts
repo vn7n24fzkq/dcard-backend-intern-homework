@@ -13,8 +13,8 @@ initRedis(() => {
 function startServer() {
     const app = express();
     const PORT = 8000;
-    app.use(loggerMiddleware);
     app.use(rateLimitMiddleware);
+    app.use(loggerMiddleware);
 
     app.get('/', (req, res, next) => {
         res.send('Hello');
