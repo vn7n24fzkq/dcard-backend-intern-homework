@@ -30,7 +30,7 @@
 
 ### Note
 
--   我擅自額外在 header 加上 X-RateLimit-Limit 來回傳 time window 中有多少請求額度, 以及 window 類型
+-   我額外在 header 加上 X-RateLimit-Limit 來回傳 time window 中有多少請求額度, 以及 window 類型
     -   EX : `100;window=60;comment="fixed window"` 代表每個 window 60 秒,並且每個 window 裡面允許 100 個請求
 
 -   sliding-window 不包含 `X-RateLimit-Reset` 因為會需要額外做計算
