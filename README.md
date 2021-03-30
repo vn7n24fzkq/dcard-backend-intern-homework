@@ -38,8 +38,11 @@
 
 -   Race Condition 問題
     -   目前 fixed window 不太受 Race Conditioin 影響
+    -   目前 sliding window 受 Race Conditioin 影響, 但整體來說仍可達到 rate limit 的效果，如要改善，應改善回傳計算 remaining 的[地方](https://github.com/vn7n24fzkq/dcard-backend-intern-homework/blob/a515d4dffcbf94c5ca9775bc519e1553433169ae/src/middleware/rateLimit.ts#L37)
     -   Do everything in Lua script
         -   應考慮 script 的 atomic 特性會不會影響到整體運作效率
+## 測試
+使用 [autocannon](https://github.com/mcollina/autocannon) 測試
 
 ## 參考資料
 
