@@ -100,8 +100,10 @@ export function rateLimitMiddleware(
     res: Response,
     next: NextFunction
 ) {
+    // const ipAddress = req.ip;
+    const ipAddress = req.header('X-Forwarded-For')!; // We use forwarded header to simulate requests from different clients
     if (process.env.RATE_STRATEGY === 'fixed-window') {
-        fixedWindowLimiter(req.ip)
+        fixedWindowLimiter(ipAddress)
             .then((rateLimitInfo) => {
                 setRateLimitInfoToHeader(rateLimitInfo, res);
                 if (!res.writableEnded) {
@@ -112,7 +114,7 @@ export function rateLimitMiddleware(
                 return res.status(500).end();
             });
     } else if (process.env.RATE_STRATEGY === 'sliding-window') {
-        slidingWindowLimiter(req.ip)
+        slidingWindowLimiter(ipAddress)
             .then((rateLimitInfo) => {
                 setRateLimitInfoToHeader(rateLimitInfo, res);
                 if (!res.writableEnded) {

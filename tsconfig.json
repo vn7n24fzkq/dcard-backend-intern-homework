@@ -8,5 +8,5 @@
         "outDir": "./dist",
         "sourceMap": true
     },
-    "exclude": ["benchmark.ts"]
+    "exclude": ["benchmark.js", "benchmark-setup-client.js"]
 }
