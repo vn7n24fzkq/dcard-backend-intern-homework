@@ -37,7 +37,7 @@
 
 -   Race Condition 問題
     -   目前 fixed window 不太受 Race Conditioin 影響
-    -   目前 sliding window 受 Race Conditioin 影響, 但整體來說仍可達到 rate limit 的效果，如要準確計算，應改善回傳計算 remaining 的[地方](https://github.com/vn7n24fzkq/dcard-backend-intern-homework/blob/abee0cf0a7177047f9f70bc6a1a9980ab1d08d0f/src/middleware/rateLimit.ts#L37)
+    -   目前 sliding window 受 Race Conditioin 影響, 但整體來說仍可達到 rate limit 的效果，如要準確計算，應改善計算 remaining 的[地方](https://github.com/vn7n24fzkq/dcard-backend-intern-homework/blob/abee0cf0a7177047f9f70bc6a1a9980ab1d08d0f/src/middleware/rateLimit.ts#L37)
     -   Do everything in Lua script
         -   應考慮 script 的 atomic 特性會不會影響到整體運作效率
 ## 測試
@@ -46,12 +46,14 @@ VirtualBox
 OS: Ubuntu 20.02
 Memory: 8192 MB
 Processor: 8
+Node12
+
 使用 [autocannon](https://github.com/mcollina/autocannon) 測試 : 參數 connections 20 pipelining 4 duration 30 其餘都使用預設 
 
 先用 ``` npm run ```啟動 任一 server
 然後再 ``` npm run benchamark ```
 這邊簡單測試一下單純兩種策略的差別，以及在此 middleware 之上再加入其他處理(例如:logger)的影響
-可以看到 logger 的加入會影響請求時間 (尋找是否有 async 的 logging 方式)
+可以看到 logger 的加入會明顯影響請求時間 (這邊可以透過不 log 被 limiter 擋下的請求來改善)
 
 ##### fixed-window
 - fixed-window without logger
