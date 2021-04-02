@@ -69,7 +69,7 @@ Node12
 - sliding-window with logger
 <img src="https://user-images.githubusercontent.com/20241522/112953116-c6f0cf80-916f-11eb-9400-6ef666d01fa9.png" height="240" width="500"> 
 
-可以看到以相同時間內同一 IP 可以處理的請求數量來說 sliding-window 上的效果是跟 fixed-window 差不多的的, 但實務上來說 sliding-window 可以避免瞬間流量過大
+可以看到以相同時間內同一 IP 可以處理的請求數量來說 sliding-window 上的效果是跟 fixed-window 差不多的的(應該需要更深入的測試), 但實務上來說 sliding-window 可以避免瞬間流量過大
 
 加入 logger 後可以看到對於可以處理的請求數量來說有明顯下降的趨勢(如果非必要，在設計上應考慮減少對於每個請求的前處理會做的事情)
 
